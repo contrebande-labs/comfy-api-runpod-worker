@@ -1,5 +1,6 @@
 import runpod
 from runpod.serverless.utils import rp_upload
+from runpod.serverless.modules.rp_logger import RunPodLogger
 import json
 import urllib.request
 import urllib.parse
@@ -8,6 +9,9 @@ import os
 import requests
 import base64
 from io import BytesIO
+
+
+logger = RunPodLogger()
 
 # Time to wait between API check attempts in milliseconds
 COMFY_API_AVAILABLE_INTERVAL_MS = 50
@@ -22,6 +26,8 @@ COMFY_HOST = "127.0.0.1:8188"
 # Enforce a clean state after each job is done
 # see https://docs.runpod.io/docs/handler-additional-controls#refresh-worker
 REFRESH_WORKER = os.environ.get("REFRESH_WORKER", "false").lower() == "true"
+
+
 
 
 def validate_input(job_input):
@@ -344,7 +350,24 @@ def handler(job):
 
     return result
 
+def wait_for_service(url):
+    retries = 0
+
+    while True:
+        try:
+            requests.get(url)
+            return
+        except requests.exceptions.RequestException:
+            retries += 1
+            # Only log every 15 retries so the logs don't get spammed
+            if retries % 15 == 0:
+                logger.info('Service not ready yet. Retrying...')
+        except Exception as err:
+            logger.error(f'Error: {err}')
+
+        time.sleep(0.2)
 
 # Start the handler only if this script is run directly
 if __name__ == "__main__":
+    wait_for_service("http://127.0.0.1:8188")
     runpod.serverless.start({"handler": handler})

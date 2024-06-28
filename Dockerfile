@@ -1,5 +1,7 @@
 # Use Nvidia CUDA base image
-FROM nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04 as base
+FROM ubuntu:23.10
+
+ARG SDXL_MODEL=https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/blob/main/sd_xl_base_1.0.safetensors
 
 # Prevents prompts from packages asking for user input during installation
 ENV DEBIAN_FRONTEND=noninteractive
@@ -9,44 +11,78 @@ ENV PIP_PREFER_BINARY=1
 ENV PYTHONUNBUFFERED=1 
 
 # Install Python, git and other necessary tools
-RUN apt-get update && apt-get install -y \
-    python3.10 \
-    python3-pip \
-    git \
-    wget
+RUN apt update
+RUN apt upgrade --yes
+RUN apt install --yes git curl python3 pip ffmpeg libsm6 libxext6
 
 # Clean up to reduce image size
-RUN apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
+RUN apt autoremove --yes
+RUN apt clean --yes
+RUN rm -rf /var/lib/apt/lists/*
 
-# Clone ComfyUI repository
-RUN git clone https://github.com/comfyanonymous/ComfyUI.git /comfyui
+# Set pip defaults
+RUN pip config set global.break-system-packages true
+RUN pip config set global.no-cache-dir true
 
-# Change working directory to ComfyUI
-WORKDIR /comfyui
+# Install Comfy UI
+RUN git clone https://github.com/contrebande-labs/ComfyUI /comfyui
 
-ARG SKIP_DEFAULT_MODELS
-# Download checkpoints/vae/LoRA to include in image.
-RUN if [ -z "$SKIP_DEFAULT_MODELS" ]; then wget -O models/checkpoints/sd_xl_base_1.0.safetensors https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_base_1.0.safetensors; fi
-RUN if [ -z "$SKIP_DEFAULT_MODELS" ]; then wget -O models/vae/sdxl_vae.safetensors https://huggingface.co/stabilityai/sdxl-vae/resolve/main/sdxl_vae.safetensors; fi
-RUN if [ -z "$SKIP_DEFAULT_MODELS" ]; then wget -O models/vae/sdxl-vae-fp16-fix.safetensors https://huggingface.co/madebyollin/sdxl-vae-fp16-fix/resolve/main/sdxl_vae.safetensors; fi
+# Include base SDXL model
+RUN cd /comfyui/models/checkpoints && curl -LO $SDXL_MODEL
 
-# Install ComfyUI dependencies
-RUN pip3 install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121 \
-    && pip3 install --no-cache-dir xformers==0.0.21 \
-    && pip3 install -r requirements.txt
+# Include controlnet models
+RUN cd /comfyui/models/controlnet && curl -LO https://huggingface.co/TTPlanet/TTPLanet_SDXL_Controlnet_Tile_Realistic/resolve/main/TTPLANET_Controlnet_Tile_realistic_v2_fp16.safetensors
 
-# Install runpod
-RUN pip3 install runpod requests
+# Include detailing lora models
+RUN cd /comfyui/models/loras && curl -L https://huggingface.co/Ukado/S-C/resolve/main/hand%204.safetensors > "hand 4.safetensors"
+RUN cd /comfyui/models/loras && curl -LO https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_offset_example-lora_1.0.safetensors
 
-# Support for the network volume
-ADD src/extra_model_paths.yaml ./
+# Include upscaling
+RUN cd /comfyui/models/upscale_models && curl -LO https://github.com/JingyunLiang/SwinIR/releases/download/v0.0/001_classicalSR_DF2K_s64w8_SwinIR-M_x2.pth
+RUN cd /comfyui/models/upscale_models && curl -LO https://github.com/JingyunLiang/SwinIR/releases/download/v0.0/001_classicalSR_DF2K_s64w8_SwinIR-M_x3.pth
+RUN cd /comfyui/models/upscale_models && curl -LO https://github.com/JingyunLiang/SwinIR/releases/download/v0.0/001_classicalSR_DF2K_s64w8_SwinIR-M_x4.pth
+RUN cd /comfyui/models/upscale_models && curl -LO https://github.com/JingyunLiang/SwinIR/releases/download/v0.0/001_classicalSR_DF2K_s64w8_SwinIR-M_x8.pth
 
-# Go back to the root
-WORKDIR /
+# Include detaling preprocessor models
+RUN mkdir -p /comfyui/models/sams
+RUN cd /comfyui/models/sams && curl -LO https://huggingface.co/segments-arnaud/sam_vit_h/resolve/main/sam_vit_h_4b8939.pth
+RUN mkdir -p /comfyui/models/mmdets/bbox
+RUN cd /comfyui/models/mmdets/bbox && curl -LO https://huggingface.co/dustysys/ddetailer/resolve/main/mmdet/segm/mmdet_dd-person_mask2former.pth
+RUN cd /comfyui/models/mmdets/bbox && curl -LO https://huggingface.co/dustysys/ddetailer/raw/main/mmdet/segm/mmdet_dd-person_mask2former.py
+RUN mkdir -p /comfyui/models/ultralytics/bbox
+RUN cd /comfyui/models/ultralytics/bbox && curl -LO https://huggingface.co/Bingsu/adetailer/resolve/main/face_yolov9c.pt
+RUN cd /comfyui/models/ultralytics/bbox && curl -LO https://huggingface.co/Bingsu/adetailer/resolve/main/hand_yolov9c.pt
+RUN mkdir -p /comfyui/models/ultralytics/segm
+RUN cd /comfyui/models/ultralytics/segm && curl -LO https://huggingface.co/Bingsu/adetailer/resolve/main/person_yolov8m-seg.pt
+RUN mkdir -p /comfyui/models/onnx
+
+# Install python dependencies
+RUN pip install torch==2.3.0 torchvision==0.18.0 torchaudio==2.3.0 --index-url https://download.pytorch.org/whl/cu121
+RUN pip install onnxruntime-gpu --extra-index-url https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/
+RUN pip install xformers einops transformers safetensors psutil kornia pillow-avif-plugin
+RUN pip install scikit-image scikit-learn opencv-python opencv-python-headless opencv-contrib-python opencv-contrib-python-headless
+RUN pip install ultralytics segment_anything mediapipe openmim mmcv mmdet mmengine fvcore
+RUN pip install omegaconf ftfy svglib piexif GitPython trimesh[easy] pyyaml psutil pillow-jxl-plugin torchsde
+RUN pip install runpod aiohttp cachetools spandrel
 
 # Add the start and the handler
 ADD src/start.sh src/rp_handler.py test_input.json ./
 RUN chmod +x /start.sh
 
+# Install custom nodes
+RUN cd /comfyui/custom_nodes && git clone https://github.com/ltdrdata/ComfyUI-Impact-Pack && cd /comfyui/custom_nodes/ComfyUI-Impact-Pack && git clone https://github.com/ltdrdata/ComfyUI-Impact-Subpack impact_subpack
+RUN cd /comfyui/custom_nodes && git clone https://github.com/ssitu/ComfyUI_UltimateSDUpscale --recursive
+RUN cd /comfyui/custom_nodes && git clone https://github.com/Fannovel16/comfyui_controlnet_aux
+RUN cd /comfyui/custom_nodes && git clone https://github.com/ltdrdata/ComfyUI-Manager
+RUN cd /comfyui/custom_nodes && git clone https://github.com/WASasquatch/was-node-suite-comfyui
+RUN cd /comfyui/custom_nodes && git clone https://github.com/ltdrdata/ComfyUI-Inspire-Pack
+
+# Update to latest Comfy UI
+RUN cd /comfyui && git pull
+
+# Set environment variables
+ENV COMFYUI_PATH=/comfyui
+ENV COMFYUI_MODEL_PATH=/comfyui/models
+
 # Start the container
-CMD /start.sh
+CMD ["./start.sh"]
