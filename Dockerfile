@@ -62,8 +62,8 @@ RUN pip install onnxruntime-gpu --extra-index-url https://aiinfra.pkgs.visualstu
 RUN pip install xformers einops transformers safetensors psutil kornia pillow-avif-plugin
 RUN pip install scikit-image scikit-learn opencv-python opencv-python-headless opencv-contrib-python opencv-contrib-python-headless
 RUN pip install ultralytics segment_anything mediapipe openmim mmcv mmdet mmengine fvcore
-RUN pip install omegaconf ftfy svglib piexif GitPython trimesh[easy] pyyaml psutil pillow-jxl-plugin torchsde
-RUN pip install runpod aiohttp cachetools spandrel
+RUN pip install omegaconf ftfy svglib piexif GitPython trimesh[easy] pyyaml psutil pillow-jxl-plugin torchsde numba spandrel
+RUN pip install runpod aiohttp cachetools 
 
 # Add the start and the handler
 ADD src/start.sh src/rp_handler.py test_input.json ./
