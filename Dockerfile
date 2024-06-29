@@ -38,11 +38,12 @@ RUN cd /comfyui/models/upscale_models && curl -LO https://github.com/JingyunLian
 
 # Include detaling preprocessor models
 RUN mkdir -p /comfyui/models/sams
-RUN cd /comfyui/models/sams && curl -L https://huggingface.co/facebook/sam-vit-huge/blob/main/pytorch_model.bin -o sam_vit_h_4b8939.pth
+RUN cd /comfyui/models/sams && curl -LO https://huggingface.co/spaces/facebook/ov-seg/resolve/main/sam_vit_h_4b8939.pth
 RUN mkdir -p /comfyui/models/ultralytics/segm
 RUN cd /comfyui/models/ultralytics/segm && curl -LO https://huggingface.co/Bingsu/adetailer/resolve/main/person_yolov8m-seg.pt
+
+# Include controlnet models
 RUN cd /comfyui/models/controlnet/ && curl -L https://huggingface.co/xinsir/controlnet-depth-sdxl-1.0/resolve/main/diffusion_pytorch_model.safetensors -o controlnet-depth-sdxl-1.0-xinsir.safetensors
-RUN mkdir -p /comfyui/models/onnx
 
 # Install python dependencies
 RUN pip install torch==2.3.0 torchvision==0.18.0 torchaudio==2.3.0 --index-url https://download.pytorch.org/whl/cu121
