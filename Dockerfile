@@ -33,21 +33,15 @@ RUN cd /comfyui/models/checkpoints && curl -LO $SDXL_MODEL
 # Include detailing lora models
 RUN cd /comfyui/models/loras && curl -LO https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_offset_example-lora_1.0.safetensors
 
-# Include upscaling
+# Include upscaling models
 RUN cd /comfyui/models/upscale_models && curl -LO https://github.com/JingyunLiang/SwinIR/releases/download/v0.0/001_classicalSR_DF2K_s64w8_SwinIR-M_x2.pth
 
 # Include detaling preprocessor models
 RUN mkdir -p /comfyui/models/sams
-RUN cd /comfyui/models/sams && curl -LO https://huggingface.co/segments-arnaud/sam_vit_h/resolve/main/sam_vit_h_4b8939.pth
-RUN cd /comfyui/models/sams && curl -LO https://huggingface.co/segments-arnaud/sam_vit_b/resolve/main/sam_vit_b_01ec64.pth
-RUN mkdir -p /comfyui/models/mmdets/bbox
-RUN cd /comfyui/models/mmdets/bbox && curl -LO https://huggingface.co/dustysys/ddetailer/resolve/main/mmdet/bbox/mmdet_anime-face_yolov3.pth
-RUN cd /comfyui/models/mmdets/bbox && curl -LO https://huggingface.co/dustysys/ddetailer/raw/main/mmdet/bbox/mmdet_anime-face_yolov3.py
-RUN mkdir -p /comfyui/models/ultralytics/bbox
-RUN cd /comfyui/models/ultralytics/bbox && curl -LO https://huggingface.co/Bingsu/adetailer/resolve/main/face_yolov8m.pt
-RUN cd /comfyui/models/ultralytics/bbox && curl -LO https://huggingface.co/Bingsu/adetailer/resolve/main/hand_yolov8s.pt
+RUN cd /comfyui/models/sams && curl -L https://huggingface.co/facebook/sam-vit-huge/blob/main/pytorch_model.bin -o sam_vit_h_4b8939.pth
 RUN mkdir -p /comfyui/models/ultralytics/segm
 RUN cd /comfyui/models/ultralytics/segm && curl -LO https://huggingface.co/Bingsu/adetailer/resolve/main/person_yolov8m-seg.pt
+RUN cd /comfyui/models/controlnet/ && curl -L https://huggingface.co/xinsir/controlnet-depth-sdxl-1.0/resolve/main/diffusion_pytorch_model.safetensors -o controlnet-depth-sdxl-1.0-xinsir.safetensors
 RUN mkdir -p /comfyui/models/onnx
 
 # Install python dependencies
@@ -57,7 +51,7 @@ RUN pip install xformers einops transformers safetensors psutil kornia pillow-av
 RUN pip install scikit-image scikit-learn opencv-python opencv-python-headless opencv-contrib-python opencv-contrib-python-headless
 RUN pip install ultralytics segment_anything mediapipe openmim mmcv mmdet mmengine fvcore
 RUN pip install omegaconf ftfy svglib piexif GitPython trimesh[easy] pyyaml psutil pillow-jxl-plugin torchsde numba spandrel
-RUN pip install runpod aiohttp cachetools 
+RUN pip install runpod aiohttp cachetools
 
 # Add the start and the handler
 ADD src/start.sh src/rp_handler.py test_input.json ./
@@ -70,6 +64,10 @@ RUN cd /comfyui/custom_nodes && git clone https://github.com/Fannovel16/comfyui_
 RUN cd /comfyui/custom_nodes && git clone https://github.com/ltdrdata/ComfyUI-Manager
 RUN cd /comfyui/custom_nodes && git clone https://github.com/WASasquatch/was-node-suite-comfyui
 RUN cd /comfyui/custom_nodes && git clone https://github.com/ltdrdata/ComfyUI-Inspire-Pack
+
+# Add Impact nodes config
+RUN touch /comfyui/custom_nodes/ComfyUI-Impact-Pack/skip_download_model
+ADD impact-pack.ini /comfyui/custom_nodes/ComfyUI-Impact-Pack/
 
 # Update to latest Comfy UI
 RUN cd /comfyui && git pull
