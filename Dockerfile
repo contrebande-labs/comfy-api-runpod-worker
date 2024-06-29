@@ -30,28 +30,22 @@ RUN git clone https://github.com/contrebande-labs/ComfyUI /comfyui
 # Include base SDXL model
 RUN cd /comfyui/models/checkpoints && curl -LO $SDXL_MODEL
 
-# Include controlnet models
-RUN cd /comfyui/models/controlnet && curl -LO https://huggingface.co/TTPlanet/TTPLanet_SDXL_Controlnet_Tile_Realistic/resolve/main/TTPLANET_Controlnet_Tile_realistic_v2_fp16.safetensors
-
 # Include detailing lora models
-RUN cd /comfyui/models/loras && curl -L https://huggingface.co/Ukado/S-C/resolve/main/hand%204.safetensors > "hand 4.safetensors"
 RUN cd /comfyui/models/loras && curl -LO https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_offset_example-lora_1.0.safetensors
 
 # Include upscaling
 RUN cd /comfyui/models/upscale_models && curl -LO https://github.com/JingyunLiang/SwinIR/releases/download/v0.0/001_classicalSR_DF2K_s64w8_SwinIR-M_x2.pth
-RUN cd /comfyui/models/upscale_models && curl -LO https://github.com/JingyunLiang/SwinIR/releases/download/v0.0/001_classicalSR_DF2K_s64w8_SwinIR-M_x3.pth
-RUN cd /comfyui/models/upscale_models && curl -LO https://github.com/JingyunLiang/SwinIR/releases/download/v0.0/001_classicalSR_DF2K_s64w8_SwinIR-M_x4.pth
-RUN cd /comfyui/models/upscale_models && curl -LO https://github.com/JingyunLiang/SwinIR/releases/download/v0.0/001_classicalSR_DF2K_s64w8_SwinIR-M_x8.pth
 
 # Include detaling preprocessor models
 RUN mkdir -p /comfyui/models/sams
 RUN cd /comfyui/models/sams && curl -LO https://huggingface.co/segments-arnaud/sam_vit_h/resolve/main/sam_vit_h_4b8939.pth
+RUN cd /comfyui/models/sams && curl -LO https://huggingface.co/segments-arnaud/sam_vit_b/resolve/main/sam_vit_b_01ec64.pth
 RUN mkdir -p /comfyui/models/mmdets/bbox
-RUN cd /comfyui/models/mmdets/bbox && curl -LO https://huggingface.co/dustysys/ddetailer/resolve/main/mmdet/segm/mmdet_dd-person_mask2former.pth
-RUN cd /comfyui/models/mmdets/bbox && curl -LO https://huggingface.co/dustysys/ddetailer/raw/main/mmdet/segm/mmdet_dd-person_mask2former.py
+RUN cd /comfyui/models/mmdets/bbox && curl -LO https://huggingface.co/dustysys/ddetailer/resolve/main/mmdet/bbox/mmdet_anime-face_yolov3.pth
+RUN cd /comfyui/models/mmdets/bbox && curl -LO https://huggingface.co/dustysys/ddetailer/raw/main/mmdet/bbox/mmdet_anime-face_yolov3.py
 RUN mkdir -p /comfyui/models/ultralytics/bbox
-RUN cd /comfyui/models/ultralytics/bbox && curl -LO https://huggingface.co/Bingsu/adetailer/resolve/main/face_yolov9c.pt
-RUN cd /comfyui/models/ultralytics/bbox && curl -LO https://huggingface.co/Bingsu/adetailer/resolve/main/hand_yolov9c.pt
+RUN cd /comfyui/models/ultralytics/bbox && curl -LO https://huggingface.co/Bingsu/adetailer/resolve/main/face_yolov8m.pt
+RUN cd /comfyui/models/ultralytics/bbox && curl -LO https://huggingface.co/Bingsu/adetailer/resolve/main/hand_yolov8s.pt
 RUN mkdir -p /comfyui/models/ultralytics/segm
 RUN cd /comfyui/models/ultralytics/segm && curl -LO https://huggingface.co/Bingsu/adetailer/resolve/main/person_yolov8m-seg.pt
 RUN mkdir -p /comfyui/models/onnx
