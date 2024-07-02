@@ -1,25 +1,23 @@
-FROM pytorch/pytorch:2.3.0-cuda12.1-cudnn8-devel
+FROM pytorch/pytorch:2.3.0-cuda12.1-cudnn8-devel AS builder
 
 # Prevents prompts from packages asking for user input during installation
 ENV DEBIAN_FRONTEND=noninteractive
 # Prefer binary wheels over source distributions for faster pip installations
 ENV PIP_PREFER_BINARY=1
 # Ensures output from python is printed immediately to the terminal without buffering
-ENV PYTHONUNBUFFERED=1 
+ENV PYTHONUNBUFFERED=1
+
+# Set pip defaults
+RUN pip config set global.break-system-packages true
 
 # Install Python, git and other necessary tools
 RUN apt update
 RUN apt upgrade --yes
-RUN apt install --yes git curl ffmpeg libsm6 libxext6 openssh-server htop
+RUN apt install --yes python3-virtualenv
 
-# Clean up to reduce image size
-RUN apt autoremove --yes
-RUN apt clean --yes
-RUN rm -rf /var/lib/apt/lists/*
-
-# Set pip defaults
-RUN pip config set global.break-system-packages true
-RUN pip config set global.no-cache-dir true
+# Create venv
+RUN python -m venv --system-site-packages /venv
+ENV PATH="/venv/bin:$PATH"
 
 # Install core Python dependencies
 RUN pip freeze | grep == | sed 's/==/>=/' > constraints.txt
@@ -49,6 +47,26 @@ RUN pip freeze | grep == | sed 's/==/>=/' > constraints.txt
 RUN pip install -c constraints.txt matrix-client
 RUN pip freeze | grep == | sed 's/==/>=/' > constraints.txt
 
+FROM pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime
+
+# Prevents prompts from packages asking for user input during installation
+ENV DEBIAN_FRONTEND=noninteractive
+# Prefer binary wheels over source distributions for faster pip installations
+ENV PIP_PREFER_BINARY=1
+# Ensures output from python is printed immediately to the terminal without buffering
+ENV PYTHONUNBUFFERED=1 
+
+# Set pip defaults
+RUN pip config set global.break-system-packages true
+RUN pip config set global.no-cache-dir true
+
+# Install Python, git and other necessary tools
+RUN apt update && apt upgrade --yes && apt install --yes git curl ffmpeg libsm6 libxext6 openssh-server htop python3-virtualenv && apt autoremove --yes && apt clean --yes && rm -rf /var/lib/apt/lists/*
+
+# Copy venv from builder layers
+COPY --from=builder /venv /venv
+
 # Set environment variables
 ENV COMFYUI_PATH=/workspace/ComfyUI
 ENV COMFYUI_MODEL_PATH=$COMFYUI_PATH/models
+ENV PATH="/venv/bin:$PATH"
