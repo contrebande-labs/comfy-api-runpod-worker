@@ -1,4 +1,4 @@
-FROM pytorch/pytorch:2.3.1-cuda11.8-cudnn8-devel
+FROM pytorch/pytorch:2.3.0-cuda12.1-cudnn8-devel
 
 # Prevents prompts from packages asking for user input during installation
 ENV DEBIAN_FRONTEND=noninteractive
@@ -23,9 +23,7 @@ RUN pip config set global.no-cache-dir true
 
 # Install core Python dependencies
 RUN pip freeze | grep == | sed 's/==/>=/' > constraints.txt
-RUN pip install -c constraints.txt -U ninja
-RUN pip freeze | grep == | sed 's/==/>=/' > constraints.txt
-RUN pip install -c constraints.txt -v -U git+https://github.com/facebookresearch/xformers.git@main#egg=xformers
+RUN pip install -c constraints.txt xformers --index-url https://download.pytorch.org/whl/cu121
 RUN pip freeze | grep == | sed 's/==/>=/' > constraints.txt
 RUN pip install -c constraints.txt onnxruntime-gpu --extra-index-url https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/
 RUN pip freeze | grep == | sed 's/==/>=/' > constraints.txt
@@ -33,7 +31,10 @@ RUN pip install -c constraints.txt scikit-image scikit-learn opencv-python openc
 RUN pip freeze | grep == | sed 's/==/>=/' > constraints.txt
 RUN pip install -c constraints.txt mmcv
 RUN pip freeze | grep == | sed 's/==/>=/' > constraints.txt
-RUN pip install -c constraints.txt safetensors
+RUN pip install -c constraints.txt safetensors pytorch_lightning accelerate
+RUN pip freeze | grep == | sed 's/==/>=/' > constraints.txt
+RUN pip install -c constraints.txt open-clip-torch
+
 # Some have specific dependency versions and have to be installed early on, without constraints
 RUN pip install mediapipe
 
@@ -43,7 +44,7 @@ RUN pip install -c constraints.txt einops transformers kornia ultralytics segmen
 RUN pip freeze | grep == | sed 's/==/>=/' > constraints.txt
 RUN pip install -c constraints.txt ftfy svglib piexif trimesh[easy] pillow-jxl-plugin pillow-avif-plugin torchsde numba spandrel
 RUN pip freeze | grep == | sed 's/==/>=/' > constraints.txt
-RUN pip install -c constraints.txt runpod aiohttp cachetools cmake PyGithub GitPython pyyaml psutil omegaconf
+RUN pip install -c constraints.txt runpod aiohttp cachetools cmake PyGithub GitPython pyyaml psutil omegaconf simpleeval
 RUN pip freeze | grep == | sed 's/==/>=/' > constraints.txt
 
 # Set environment variables
