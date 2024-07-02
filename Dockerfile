@@ -46,6 +46,8 @@ RUN pip install -c constraints.txt ftfy svglib piexif trimesh[easy] pillow-jxl-p
 RUN pip freeze | grep == | sed 's/==/>=/' > constraints.txt
 RUN pip install -c constraints.txt runpod aiohttp cachetools cmake PyGithub GitPython pyyaml psutil omegaconf simpleeval
 RUN pip freeze | grep == | sed 's/==/>=/' > constraints.txt
+RUN pip install -c constraints.txt matrix-client
+RUN pip freeze | grep == | sed 's/==/>=/' > constraints.txt
 
 # Set environment variables
 ENV COMFYUI_PATH=/workspace/ComfyUI
