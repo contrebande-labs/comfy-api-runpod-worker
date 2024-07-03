@@ -13,7 +13,7 @@ RUN pip config set global.break-system-packages true
 # Install Python, git and other necessary tools
 RUN apt update
 RUN apt upgrade --yes
-RUN apt install --yes git python3-virtualenv libgomp1 libsm6 libxext6
+RUN apt install --yes git python3-virtualenv
 
 # Create venv
 RUN python -m venv --system-site-packages /venv
@@ -51,14 +51,17 @@ RUN pip install mediapipe
 RUN pip freeze | grep == | sed 's/==/>=/' > constraints.txt
 RUN pip install -c constraints.txt einops transformers kornia ultralytics segment_anything openmim mmdet mmengine fvcore
 RUN pip freeze | grep == | sed 's/==/>=/' > constraints.txt
-RUN pip install -c constraints.txt ftfy svglib piexif trimesh[easy] pillow-jxl-plugin pillow-avif-plugin torchsde numba spandrel
+RUN pip install -c constraints.txt ftfy svglib piexif trimesh[easy] pillow pillow-jxl-plugin pillow-avif-plugin torchsde numba spandrel
 RUN pip freeze | grep == | sed 's/==/>=/' > constraints.txt
 RUN pip install -c constraints.txt runpod aiohttp cachetools cmake PyGithub GitPython pyyaml psutil omegaconf simpleeval
 RUN pip freeze | grep == | sed 's/==/>=/' > constraints.txt
 RUN pip install -c constraints.txt matrix-client moviepy librosa decorator pyspellchecker pilgram rembg wordcloud networkx
 RUN pip freeze | grep == | sed 's/==/>=/' > constraints.txt
-RUN pip install -c constraints.txt matrix-client pandas openai fairscale clip
+RUN pip install -c constraints.txt matrix-client pandas fairscale clip scikit-build typing diffusers symusic
 RUN pip freeze | grep == | sed 's/==/>=/' > constraints.txt
+RUN pip install -c constraints.txt cassandra-driver boto3 openai
+RUN pip freeze | grep == | sed 's/==/>=/' > constraints.txt
+
 
 FROM pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime
 
