@@ -61,9 +61,17 @@ RUN pip install -c constraints.txt matrix-client pandas fairscale clip scikit-bu
 RUN pip freeze | grep == | sed 's/==/>=/' > constraints.txt
 RUN pip install -c constraints.txt cassandra-driver boto3 openai
 RUN pip freeze | grep == | sed 's/==/>=/' > constraints.txt
-
+RUN pip install -c constraints.txt colour-science deepdiff pynvml py-cpuinfo
+RUN pip freeze | grep == | sed 's/==/>=/' > constraints.txt
 
 FROM pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime
+
+# /workspace/ComfyUI/custom_nodes/comfyui_controlnet_aux/ckpts/yzd-v/DWPose/yolox_l.onnx
+# /workspace/ComfyUI/custom_nodes/comfyui_controlnet_aux/ckpts/yzd-v/DWPose/dw-ll_ucoco_384.onnx
+# /workspace/ComfyUI/custom_nodes/comfyui_controlnet_aux/ckpts/lllyasviel/Annotators/body_pose_model.pth
+# /workspace/ComfyUI/custom_nodes/comfyui_controlnet_aux/ckpts/lllyasviel/Annotators/hand_pose_model.pth.
+# /workspace/ComfyUI/custom_nodes/comfyui_controlnet_aux/ckpts/lllyasviel/Annotators/facenet.pth.
+# /workspace/ComfyUI/custom_nodes/comfyui_controlnet_aux/ckpts/depth-anything/Depth-Anything-V2-Large/depth_anything_v2_vitl.pth
 
 # Prevents prompts from packages asking for user input during installation
 ENV DEBIAN_FRONTEND=noninteractive
