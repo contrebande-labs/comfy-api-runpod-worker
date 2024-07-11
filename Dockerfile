@@ -1,4 +1,4 @@
-FROM pytorch/pytorch:2.3.0-cuda12.1-cudnn8-devel AS builder
+FROM pytorch/pytorch:2.3.1-cuda12.1-cudnn8-devel AS builder
 
 # Prevents prompts from packages asking for user input during installation
 ENV DEBIAN_FRONTEND=noninteractive
@@ -12,7 +12,6 @@ RUN pip config set global.break-system-packages true
 
 # Install Python, git and other necessary tools
 RUN apt update
-RUN apt upgrade --yes
 RUN apt install --yes git python3-virtualenv
 
 # Create venv
@@ -42,7 +41,7 @@ RUN pip install -c constraints.txt open-clip-torch
 RUN pip freeze | grep == | sed 's/==/>=/' > constraints.txt
 RUN pip install -c constraints.txt 'git+https://github.com/facebookresearch/detectron2.git'
 RUN pip freeze | grep == | sed 's/==/>=/' > constraints.txt
-RUN pip install -c constraints.txt https://github.com/abetlen/llama-cpp-python/releases/download/v0.2.81/llama_cpp_python-0.2.81-cp310-cp310-linux_x86_64.whl
+RUN pip install -c constraints.txt https://github.com/abetlen/llama-cpp-python/releases/download/v0.2.82-cu121/llama_cpp_python-0.2.82-cp310-cp310-linux_x86_64.whl
 
 # Some have specific dependency versions and have to be installed early on, without constraints
 RUN pip install mediapipe
@@ -64,7 +63,10 @@ RUN pip freeze | grep == | sed 's/==/>=/' > constraints.txt
 RUN pip install -c constraints.txt colour-science deepdiff pynvml py-cpuinfo
 RUN pip freeze | grep == | sed 's/==/>=/' > constraints.txt
 
-FROM pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime
+FROM pytorch/pytorch:2.3.1-cuda12.1-cudnn8-runtime
+
+# Copy venv from builder layers
+COPY --from=builder /venv /venv
 
 # /workspace/ComfyUI/custom_nodes/comfyui_controlnet_aux/ckpts/yzd-v/DWPose/yolox_l.onnx
 # /workspace/ComfyUI/custom_nodes/comfyui_controlnet_aux/ckpts/yzd-v/DWPose/dw-ll_ucoco_384.onnx
@@ -81,10 +83,7 @@ ENV PIP_PREFER_BINARY=1
 ENV PYTHONUNBUFFERED=1
 
 # Set pip defaults and install git and other necessary CLI tools
-RUN pip config set global.break-system-packages true && pip config set global.no-cache-dir true && pip install --upgrade pip && apt update && apt upgrade --yes && apt install --yes git libgomp1 curl ffmpeg libsm6 libxext6 openssh-server htop python3-virtualenv && apt autoremove --yes && apt clean --yes && rm -rf /var/lib/apt/lists/*
-
-# Copy venv from builder layers
-COPY --from=builder /venv /venv
+RUN pip config set global.break-system-packages true && pip config set global.no-cache-dir true && apt update && apt install --yes git libgomp1 curl ffmpeg libsm6 libxext6 openssh-server htop && apt autoremove --yes && apt clean --yes && rm -rf /var/lib/apt/lists/*
 
 # Set environment variables
 ENV COMFYUI_PATH=/workspace/ComfyUI
