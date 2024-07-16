@@ -88,7 +88,7 @@ RUN pip config set global.break-system-packages true && \
     && apt update && \
     apt install --yes git libgomp1 curl ffmpeg libsm6 libxext6 openssh-server htop unzip && \
     curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
-    unzip awscliv2.zip & \
+    unzip awscliv2.zip && \
     ./aws/install & \
     rm -fr ./aws awscliv2.zip & \
     apt autoremove --yes && apt clean --yes && \
