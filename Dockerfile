@@ -84,14 +84,17 @@ ENV PYTHONUNBUFFERED=1
 
 # Set pip defaults and install git and other necessary CLI tools
 RUN pip config set global.break-system-packages true && \
-    pip config set global.no-cache-dir true \
-    && apt update && \
-    apt install --yes git libgomp1 curl ffmpeg libsm6 libxext6 openssh-server htop unzip && \
+    pip config set global.no-cache-dir true && \
+    apt update && \
+    apt upgrade --yes && \
+    apt install --yes git libgomp1 curl ffmpeg libsm6 libxext6 openssh-server unzip && \
     curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
     unzip awscliv2.zip && \
-    ./aws/install & \
-    rm -fr ./aws awscliv2.zip & \
-    apt autoremove --yes && apt clean --yes && \
+    ./aws/install && \
+    rm -fr ./aws awscliv2.zip && \
+    apt remove --yes unzip curl && \
+    apt autoremove --yes && \
+    apt clean --yes && \
     rm -rf /var/lib/apt/lists/*
 
 # Set environment variables
